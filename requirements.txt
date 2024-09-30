@@ -12,6 +12,7 @@ openai
 transformers
 torch
 langchain
+mail-parser
 
 # HTTP Requests for API Integration
 requests
@@ -36,7 +37,7 @@ pandas
 # Testing Frameworks
 pytest
 pytest-mock
-unittest
+unittest2
 
 # Code Quality and Linting
 flake8
@@ -46,26 +47,23 @@ isort
 # Logging
 loguru
 
-# Asynchronous Processing 
+# Asynchronous Processing (Optional)
 aiohttp
 asyncio
 
-# Task Scheduling 
+# Task Scheduling (Optional)
 APScheduler
 
-# Database Integration 
+# Database Integration (Optional)
 SQLAlchemy
 psycopg2-binary
 
-# Containerization (Docker-related dependencies are not Python packages)
+# Containerization (Docker-related dependencies are not Python packages, but you can include docker-compose if needed)
 # docker-compose
 
 # Utilities
 tqdm
 numpy
-
-# Email Parsing
-email-parser
 
 # Additional NLP Utilities
 nltk
@@ -73,7 +71,7 @@ nltk
 # File Handling
 python-multipart
 
-# Frontend Integration 
+# Frontend Integration (Optional, if serving static files or templates)
 Jinja2
 
 # Security Enhancements
@@ -81,7 +79,7 @@ bcrypt
 itsdangerous
 
 # Optional: Local LLM Hosting
-# additional packages required depending on the model and framework.
+# If hosting a local LLM, additional packages may be required depending on the model and framework.
 
 # Documentation
 sphinx

@@ -1,0 +1,14 @@
+README.md
+setup.py
+src/forensic_email_parser.egg-info/PKG-INFO
+src/forensic_email_parser.egg-info/SOURCES.txt
+src/forensic_email_parser.egg-info/dependency_links.txt
+src/forensic_email_parser.egg-info/top_level.txt
+src/parsers/__init__.py
+src/parsers/base_parser.py
+src/parsers/llm_parser.py
+src/parsers/local_llm_parser.py
+src/parsers/parser_factory.py
+src/parsers/rule_based_parser.py
+src/utils/__init__.py
+src/utils/config.py

@@ -1,10 +1,9 @@
 # src/parsers/rule_based_parser.py
 
-import re
-from typing import Dict, Any
-
+from mailparser import parse_from_string
 from .base_parser import BaseParser
-
+from typing import Dict, Any
+import re
 
 class RuleBasedParser(BaseParser):
     """
@@ -13,7 +12,7 @@ class RuleBasedParser(BaseParser):
 
     def parse(self, email_content: str) -> Dict[str, Any]:
         """
-        Parse the email content using regex to extract relevant data fields.
+        Parse the email content using regex and mail-parser to extract relevant data fields.
 
         :param email_content: The raw content of the email.
         :return: A dictionary containing the extracted data.
@@ -21,7 +20,20 @@ class RuleBasedParser(BaseParser):
         preprocessed_content = self.preprocess_email(email_content)
         extracted_data = {}
 
-        # Define regex patterns for each field
+        # Use mail-parser to parse the email
+        mail = parse_from_string(preprocessed_content)
+
+        # Extract headers
+        extracted_data['From'] = mail.from_
+        extracted_data['To'] = mail.to
+        extracted_data['Subject'] = mail.subject
+        extracted_data['Date'] = mail.date
+
+        # Extract body content
+        body = mail.body
+        extracted_data['Body'] = body
+
+        # Define regex patterns for specific fields
         patterns = {
             "Requesting Party Insurance Company": r"Requesting Party Insurance Company:\s*(.*)",
             "Handler": r"Handler:\s*(.*)",
@@ -56,19 +68,22 @@ class RuleBasedParser(BaseParser):
         }
 
         for field, pattern in patterns.items():
-            match = re.search(pattern, preprocessed_content, re.IGNORECASE | re.DOTALL)
+            match = re.search(pattern, body, re.IGNORECASE)
             if match:
-                value = match.group(1).strip()
-                # Handle boolean fields for assignment types
-                if field.startswith("Assignment Type"):
-                    extracted_data[field] = True if match.group(1).lower() == 'x' else False
-                elif field == "Ownership":
-                    extracted_data[field] = "Owner" if "Owner" in match.group(0) else "Tenant"
+                if "Assignment Type" in field:
+                    # Convert checkbox to boolean
+                    extracted_data[field] = bool(match.group(1))
                 else:
-                    extracted_data[field] = value
+                    extracted_data[field] = match.group(1).strip()
             else:
-                # If the field is "Ownership" and not matched yet, set default
-                if field == "Ownership":
-                    extracted_data[field] = "Unknown"
+                if "Ownership" in field:
+                    # Handle Owner/Tenant
+                    ownership_match = re.search(r"Owner|Tenant", body, re.IGNORECASE)
+                    extracted_data[field] = ownership_match.group(0).strip() if ownership_match else None
+                else:
+                    extracted_data[field] = None
+
+        # Process attachments if any
+        extracted_data['Attachments'] = [attachment.filename for attachment in mail.attachments] if mail.attachments else []
 
         return extracted_data
