@@ -1,7 +1,6 @@
 # tests/test_parser/test_rule_based_parser.py
 
 import pytest
-
 from src.parsers.rule_based_parser import RuleBasedParser
 
 

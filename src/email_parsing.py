@@ -1,31 +1,39 @@
-# src/email_parsing.py
-
 import logging
-from typing import List, Dict, Any
-
+import os
+import json
 import openai
-
+from typing import Dict, Any
 from parsers.parser_factory import ParserFactory
 from utils.config import Config
 
 # Configure logging
+config = Config()  # Instantiate Config to access its attributes
+log_dir = os.path.dirname(config.LOG_FILE)
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler(Config.LOG_FILE)
+handler = logging.FileHandler(config.LOG_FILE)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
 class EmailParsingError(Exception):
-    """Custom exception for email parsing errors."""
+    """
+    Custom exception for email parsing errors.
+    """
     pass
 
 
 class EmailParser:
+    """
+    EmailParser handles the parsing and validation of forensic engineering emails.
+    """
     def __init__(self):
         self.parser_factory = ParserFactory()
-        self.openai_api_key = Config.OPENAI_API_KEY
+        self.openai_api_key = config.OPENAI_API_KEY
         openai.api_key = self.openai_api_key
 
     def parse_email(self, email_content: str) -> Dict[str, Any]:
@@ -40,9 +48,9 @@ class EmailParser:
 
             # Layer 1: Automated Validation using Rule-Based Parser
             parser = self.parser_factory.get_parser(email_content)
-            logger.info(f"Selected parser: {parser.__class__.__name__}")
+            logger.info("Selected parser: %s", parser.__class__.__name__)
             extracted_data = parser.parse(email_content)
-            logger.debug(f"Extracted data from parser: {extracted_data}")
+            logger.debug("Extracted data from parser: %s", extracted_data)
 
             if not self.automated_validation(extracted_data):
                 logger.warning("Automated validation failed.")
@@ -50,7 +58,7 @@ class EmailParser:
 
             # Layer 2: AI-Assisted Review using LLM
             ai_validated_data = self.ai_assisted_review(extracted_data)
-            logger.debug(f"AI-validated data: {ai_validated_data}")
+            logger.debug("AI-validated data: %s", ai_validated_data)
 
             if not self.ai_validation(ai_validated_data):
                 logger.warning("AI-assisted validation failed.")
@@ -62,8 +70,8 @@ class EmailParser:
 
             return validated_data
 
-        except Exception as e:
-            logger.error(f"Error during email parsing: {str(e)}")
+        except EmailParsingError as e:
+            logger.error("Error during email parsing: %s", str(e))
             raise
 
     def automated_validation(self, data: Dict[str, Any]) -> bool:
@@ -73,7 +81,6 @@ class EmailParser:
         :param data: Extracted data dictionary.
         :return: Boolean indicating if validation passed.
         """
-        # Example validation rules
         required_fields = [
             "Requesting Party Insurance Company",
             "Claim Number",
@@ -84,7 +91,7 @@ class EmailParser:
 
         for field in required_fields:
             if field not in data or not data[field]:
-                logger.error(f"Missing required field: {field}")
+                logger.error("Missing required field: %s", field)
                 return False
 
         logger.info("Automated validation passed.")
@@ -99,9 +106,9 @@ class EmailParser:
         """
         try:
             prompt = self.construct_ai_prompt(data)
-            logger.debug(f"Constructed AI prompt: {prompt}")
+            logger.debug("Constructed AI prompt: %s", prompt)
 
-            response = openai.ChatCompletion.create(
+            response = openai.ChatCompletion.create(  # pylint: disable=no-member
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an assistant that verifies and enhances data extracted from forensic engineering emails."},
@@ -112,14 +119,13 @@ class EmailParser:
             )
 
             ai_response = response.choices[0].message['content']
-            logger.debug(f"AI response: {ai_response}")
+            logger.debug("AI response: %s", ai_response)
 
-            # Assuming AI returns a JSON-formatted string
             enhanced_data = self.parse_ai_response(ai_response)
             return enhanced_data
 
-        except Exception as e:
-            logger.error(f"AI-assisted review failed: {str(e)}")
+        except openai.error.OpenAIError as e:  # pylint: disable=no-member
+            logger.error("AI-assisted review failed: %s", str(e))
             raise EmailParsingError("AI-assisted review failed.") from e
 
     def construct_ai_prompt(self, data: Dict[str, Any]) -> str:
@@ -143,9 +149,7 @@ class EmailParser:
         :param ai_response: The raw response string from the AI model.
         :return: Validated data dictionary.
         """
-        import json
         try:
-            # Extract JSON part from the response
             json_start = ai_response.find('{')
             json_end = ai_response.rfind('}') + 1
             json_str = ai_response[json_start:json_end]
@@ -163,7 +167,6 @@ class EmailParser:
         :param data: Data to validate.
         :return: Boolean indicating if AI validation passed.
         """
-        # Placeholder for any additional AI-based validations
         logger.info("AI validation passed.")
         return True
 
@@ -184,22 +187,20 @@ def main():
     Entry point for the email parsing module.
     This can be invoked by other modules or scheduled tasks.
     """
-    from email_retrieval import retrieve_unread_emails
-
-    parser = EmailParser()
     try:
+        from email_retrieval import retrieve_unread_emails  # Move to top if possible
+
+        parser = EmailParser()
         emails = retrieve_unread_emails()
-        logger.info(f"Retrieved {len(emails)} unread emails.")
+        logger.info("Retrieved %d unread emails.", len(emails))
 
         for email in emails:
-            email_content = email['content']  # Assuming email dict has 'content'
+            email_content = email['content']
             parsed_data = parser.parse_email(email_content)
-            # Here, you would typically pass parsed_data to the next module
-            logger.info(f"Parsed data: {parsed_data}")
-            # Example: Save to database or queue for manual verification
+            logger.info("Parsed data: %s", parsed_data)
 
     except Exception as e:
-        logger.error(f"Failed to parse emails: {str(e)}")
+        logger.error("Failed to parse emails: %s", str(e))
 
 
 if __name__ == "__main__":

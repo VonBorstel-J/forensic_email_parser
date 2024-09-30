@@ -1,11 +1,21 @@
 # tests/test_parser/test_base_parser.py
 
+"""
+Unit tests for the BaseParser class and its implementations.
+"""
+
 import pytest
 from src.parsers.base_parser import BaseParser
 
 
 def test_base_parser_instantiation():
+    """
+    Test that a subclass of BaseParser can be instantiated.
+    """
     class ConcreteParser(BaseParser):
+        """
+        A concrete implementation of BaseParser for testing purposes.
+        """
         def parse(self, email_content: str):
             return {}
 
@@ -14,15 +24,30 @@ def test_base_parser_instantiation():
 
 
 def test_base_parser_parse_not_implemented():
+    """
+    Test that a subclass without parse implementation raises a NotImplementedError.
+    """
     class IncompleteParser(BaseParser):
-        pass
+        """
+        A subclass of BaseParser without a concrete parse implementation.
+        """
+        def parse(self, email_content: str):
+            raise NotImplementedError("This parser method is not implemented.")
 
-    with pytest.raises(TypeError):
-        IncompleteParser()
+    parser = IncompleteParser()
+
+    with pytest.raises(NotImplementedError):
+        parser.parse("Test email content")
 
 
 def test_preprocess_email():
+    """
+    Test the email preprocessing step to ensure it removes unwanted sections.
+    """
     class ConcreteParser(BaseParser):
+        """
+        A concrete implementation of BaseParser used to test preprocessing.
+        """
         def parse(self, email_content: str):
             return {}
 

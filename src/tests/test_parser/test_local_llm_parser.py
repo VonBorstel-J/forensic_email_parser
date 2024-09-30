@@ -1,9 +1,13 @@
 # tests/test_parser/test_local_llm_parser.py
+import pytest
+from unittest.mock import patch, MagicMock
+from src.parsers.local_llm_parser import LocalLLMParser
 
 import pytest
 from unittest.mock import patch, MagicMock
 
-from src.parsers.local_llm_parser import LocalLLMParser
+from parsers.local_llm_parser import LocalLLMParser
+
 
 
 @pytest.fixture
