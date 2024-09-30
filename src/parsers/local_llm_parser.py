@@ -1,4 +1,4 @@
-# local_llm_parser.py
+# src/parsers/local_llm_parser.py
 
 import logging
 import json
@@ -17,16 +17,21 @@ class LocalLLMParser(BaseParser):
         self.api_endpoint = (
             Config.LOCAL_LLM_API_ENDPOINT
         )  # e.g., "http://localhost:8000/v1/chat/completions"
+        self.logger.info(
+            f"LocalLLMParser initialized with endpoint: {self.api_endpoint}"
+        )
 
     def parse(self, email_content: str) -> Dict[str, Any]:
         """Parse the email content using a local LLM to extract relevant data fields."""
         try:
+            self.logger.info("Starting Local LLM-based parsing.")
             preprocessed_content = self.preprocess_email(email_content)
             prompt = self.construct_prompt(preprocessed_content)
             ai_response = self.call_local_llm_api(prompt)
             self.logger.debug(f"AI response: {ai_response}")
 
             extracted_data = self.parse_ai_response(ai_response)
+            self.logger.info("Local LLM-based parsing completed successfully.")
             return extracted_data
 
         except Exception as e:
@@ -51,6 +56,7 @@ class LocalLLMParser(BaseParser):
 
         for attempt in range(max_retries):
             try:
+                self.logger.debug(f"Calling local LLM API, attempt {attempt + 1}.")
                 response = requests.post(self.api_endpoint, json=payload, timeout=30)
                 response.raise_for_status()
                 json_response = response.json()
@@ -62,6 +68,7 @@ class LocalLLMParser(BaseParser):
                 if not ai_response:
                     self.logger.error("Empty response from local LLM API.")
                     raise ValueError("Received empty response from local LLM API.")
+                self.logger.debug("Local LLM API call successful.")
                 return ai_response
 
             except (HTTPError, ConnectionError, Timeout) as e:
@@ -72,6 +79,7 @@ class LocalLLMParser(BaseParser):
                     self.logger.info("Retrying local LLM API request...")
                     continue
                 else:
+                    self.logger.error("Max retries reached for local LLM API.")
                     raise
             except ValueError as e:
                 self.logger.error("Invalid response from local LLM API: %s", str(e))
@@ -129,23 +137,25 @@ class LocalLLMParser(BaseParser):
             f"{email_content}\n\n"
             "Provide the extracted data in JSON format."
         )
+        self.logger.debug("Constructed prompt for Local LLM API.")
         return prompt
 
     def parse_ai_response(self, ai_response: str) -> Dict[str, Any]:
         """Parse the local LLM model's response to extract the validated data."""
         try:
+            self.logger.debug("Parsing Local LLM response.")
             json_start = ai_response.find("{")
             json_end = ai_response.rfind("}") + 1
             if json_start == -1 or json_end == -1:
-                self.logger.error("JSON not found in AI response.")
+                self.logger.error("JSON not found in Local LLM response.")
                 raise ValueError("Local LLM response does not contain valid JSON.")
             json_str = ai_response[json_start:json_end]
             validated_data = json.loads(json_str)
             self.logger.info("Local LLM-assisted validation successful.")
             return validated_data
         except json.JSONDecodeError as e:
-            self.logger.error("Failed to parse local LLM response as JSON: %s", str(e))
+            self.logger.error("Failed to parse Local LLM response as JSON: %s", str(e))
             raise
         except Exception as e:
-            self.logger.exception("Unexpected error while parsing local LLM response.")
+            self.logger.exception("Unexpected error while parsing Local LLM response.")
             raise

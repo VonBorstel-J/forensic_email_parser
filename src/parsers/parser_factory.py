@@ -1,4 +1,4 @@
-# parser_factory.py
+# src/parsers/parser_factory.py
 
 import logging
 from .rule_based_parser import RuleBasedParser
@@ -15,10 +15,14 @@ class ParserFactory:
         self.use_local_llm = (
             Config.USE_LOCAL_LLM
         )  # Boolean flag to choose between OpenAI and local LLM
+        self.logger.info(
+            f"ParserFactory initialized. Use Local LLM: {self.use_local_llm}"
+        )
 
     def get_parser(self, email_content: str):
         """Determine which parser to use based on email content and instantiate it."""
         try:
+            self.logger.info("Selecting appropriate parser for email content.")
             preprocessed_content = self.preprocess_email(email_content).lower()
 
             if self.is_rule_based_applicable(preprocessed_content):
@@ -38,6 +42,7 @@ class ParserFactory:
     def is_rule_based_applicable(self, content: str) -> bool:
         """Determine if the rule-based parser is suitable for the given email content."""
         try:
+            self.logger.debug("Checking if rule-based parser is applicable.")
             # Define keywords or patterns that indicate a well-structured email
             rule_based_keywords = [
                 "requesting party insurance company",
@@ -50,9 +55,16 @@ class ParserFactory:
 
             for keyword in rule_based_keywords:
                 if keyword in content:
+                    self.logger.debug(
+                        f"Keyword found for rule-based parsing: {keyword}"
+                    )
                     continue
                 else:
+                    self.logger.debug(
+                        f"Keyword missing for rule-based parsing: {keyword}"
+                    )
                     return False
+            self.logger.info("All keywords present. Rule-based parser is applicable.")
             return True
         except Exception as e:
             self.logger.exception("Error during rule-based applicability check.")
@@ -61,6 +73,7 @@ class ParserFactory:
     def preprocess_email(self, email_content: str) -> str:
         """Preprocess the email content before parser selection."""
         try:
+            self.logger.debug("Preprocessing email content for parser selection.")
             # Simple preprocessing steps
             return email_content.strip()
         except Exception as e:

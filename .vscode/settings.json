@@ -1,0 +1,7 @@
+{
+    "files.autoSave": "onFocusChange",
+    "editor.renderWhitespace": "trailing",
+    "files.autoGuessEncoding": true,
+    "workbench.startupEditor": "welcomePage",
+    "explorer.fileNesting.enabled": true
+}

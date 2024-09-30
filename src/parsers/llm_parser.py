@@ -1,4 +1,4 @@
-# llm_parser.py
+# src/parsers/llm_parser.py
 
 import logging
 import json
@@ -16,10 +16,12 @@ class LLMParser(BaseParser):
         super().__init__()
         self.api_key = Config.OPENAI_API_KEY
         openai.api_key = self.api_key
+        self.logger.info("LLMParser initialized with OpenAI API.")
 
     def parse(self, email_content: str) -> Dict[str, Any]:
         """Parse the email content using an LLM to extract relevant data fields."""
         try:
+            self.logger.info("Starting LLM-based parsing.")
             preprocessed_content = self.preprocess_email(email_content)
             prompt = self.construct_prompt(preprocessed_content)
 
@@ -28,6 +30,7 @@ class LLMParser(BaseParser):
             self.logger.debug(f"AI response: {ai_response}")
 
             extracted_data = self.parse_ai_response(ai_response)
+            self.logger.info("LLM-based parsing completed successfully.")
             return extracted_data
 
         except OpenAIError as e:
@@ -42,6 +45,7 @@ class LLMParser(BaseParser):
         max_retries = 3
         for attempt in range(max_retries):
             try:
+                self.logger.debug(f"Calling OpenAI API, attempt {attempt + 1}.")
                 response = openai.ChatCompletion.create(
                     model="gpt-4",
                     messages=[
@@ -54,6 +58,7 @@ class LLMParser(BaseParser):
                     temperature=0.2,
                     max_tokens=500,
                 )
+                self.logger.debug("OpenAI API call successful.")
                 return response
             except (RateLimitError, APIError, Timeout) as e:
                 self.logger.warning(
@@ -63,6 +68,7 @@ class LLMParser(BaseParser):
                     self.logger.info("Retrying OpenAI API request...")
                     continue
                 else:
+                    self.logger.error("Max retries reached for OpenAI API.")
                     raise
             except Exception as e:
                 self.logger.exception("Unexpected error during OpenAI API call.")
@@ -112,11 +118,13 @@ class LLMParser(BaseParser):
             f"{email_content}\n\n"
             "Provide the extracted data in JSON format."
         )
+        self.logger.debug("Constructed prompt for OpenAI API.")
         return prompt
 
     def parse_ai_response(self, ai_response: str) -> Dict[str, Any]:
         """Parse the AI model's response to extract the validated data."""
         try:
+            self.logger.debug("Parsing AI response.")
             json_start = ai_response.find("{")
             json_end = ai_response.rfind("}") + 1
             if json_start == -1 or json_end == -1:

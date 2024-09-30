@@ -1,6 +1,6 @@
-# rule_based_parser.py
+# src/parsers/rule_based_parser.py
 
-from mailparser import parse_from_string, MailParser
+from mailparser import parse_from_string
 from .base_parser import BaseParser
 from typing import Dict, Any
 import re
@@ -13,6 +13,7 @@ class RuleBasedParser(BaseParser):
     def __init__(self):
         super().__init__()
         self.patterns = self.compile_patterns()
+        self.logger.info("RuleBasedParser initialized with regex patterns.")
 
     def compile_patterns(self):
         patterns = {
@@ -27,7 +28,10 @@ class RuleBasedParser(BaseParser):
             "Insured Contact #": re.compile(r"Contact #:\s*(.*)", re.IGNORECASE),
             "Loss Address": re.compile(r"Loss Address:\s*(.*)", re.IGNORECASE),
             "Public Adjuster": re.compile(r"Public Adjuster:\s*(.*)", re.IGNORECASE),
-            "Ownership": re.compile(r"Owner|Tenant", re.IGNORECASE),
+            "Ownership": re.compile(
+                r"Is the insured an Owner or a Tenant of the loss location\?\s*(Owner|Tenant)",
+                re.IGNORECASE,
+            ),
             "Adjuster Name": re.compile(r"Adjuster Name:\s*(.*)", re.IGNORECASE),
             "Adjuster Phone Number": re.compile(
                 r"Adjuster Phone Number:\s*(.*)", re.IGNORECASE
@@ -46,7 +50,7 @@ class RuleBasedParser(BaseParser):
                 r"Residence Occupied During Loss:\s*(.*)", re.IGNORECASE
             ),
             "Someone home at time of damage": re.compile(
-                r"Someone home at time of damage:\s*(.*)", re.IGNORECASE
+                r"Was Someone home at time of damage:\s*(.*)", re.IGNORECASE
             ),
             "Repair or Mitigation Progress": re.compile(
                 r"Repair or Mitigation Progress:\s*(.*)", re.IGNORECASE
@@ -73,16 +77,19 @@ class RuleBasedParser(BaseParser):
             ),
             "Attachments": re.compile(r"Attachment\(s\):\s*(.*)", re.IGNORECASE),
         }
+        self.logger.debug("Compiled regex patterns for RuleBasedParser.")
         return patterns
 
     def parse(self, email_content: str) -> Dict[str, Any]:
         """Parse the email content using regex and mail-parser to extract relevant data fields."""
         try:
+            self.logger.info("Starting rule-based parsing.")
             preprocessed_content = self.preprocess_email(email_content)
             extracted_data = {}
 
             # Use mail-parser to parse the email
             mail = parse_from_string(preprocessed_content)
+            self.logger.debug("Parsed email headers and body using mail-parser.")
 
             # Extract headers
             extracted_data["From"] = mail.from_
@@ -93,6 +100,7 @@ class RuleBasedParser(BaseParser):
             # Extract body content
             body = mail.body
             extracted_data["Body"] = body
+            self.logger.debug("Extracted email body for regex parsing.")
 
             # Use compiled regex patterns
             for field, pattern in self.patterns.items():
@@ -101,8 +109,10 @@ class RuleBasedParser(BaseParser):
                     if "Assignment Type" in field:
                         # Convert checkbox to boolean
                         extracted_data[field] = bool(match.group(1))
+                        self.logger.debug(f"Extracted {field}: {extracted_data[field]}")
                     else:
                         extracted_data[field] = match.group(1).strip()
+                        self.logger.debug(f"Extracted {field}: {extracted_data[field]}")
                 else:
                     self.logger.warning("Pattern not matched for field: %s", field)
                     extracted_data[field] = None
@@ -113,15 +123,11 @@ class RuleBasedParser(BaseParser):
                 if mail.attachments_list
                 else []
             )
+            self.logger.debug(f"Extracted attachments: {extracted_data['Attachments']}")
 
+            self.logger.info("Rule-based parsing completed successfully.")
             return extracted_data
 
-        except MailParser.MailParserError as e:
-            self.logger.error("MailParser error: %s", str(e))
-            raise
-        except re.error as e:
-            self.logger.error("Regex error while parsing email: %s", str(e))
-            raise
         except Exception as e:
             self.logger.exception("Unexpected error during rule-based parsing.")
             raise

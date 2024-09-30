@@ -1,4 +1,4 @@
-# base_parser.py
+# src/parsers/base_parser.py
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any
@@ -19,14 +19,17 @@ class BaseParser(ABC):
     def preprocess_email(self, email_content: str) -> str:
         """Preprocess the email content before parsing."""
         try:
+            self.logger.info("Starting email preprocessing.")
             lines = email_content.splitlines()
             processed_lines = []
             for line in lines:
                 # Skip common footer lines
                 if line.strip().startswith(("--", "Regards,", "Best,")):
+                    self.logger.debug(f"Skipping footer line: {line.strip()}")
                     continue
                 processed_lines.append(line)
             preprocessed_content = "\n".join(processed_lines)
+            self.logger.info("Email preprocessing completed successfully.")
             return preprocessed_content
         except Exception as e:
             self.logger.exception("Error during email preprocessing.")

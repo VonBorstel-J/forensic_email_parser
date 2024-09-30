@@ -1,10 +1,10 @@
-# src/tests/conftest.py
+# tests/conftest.py
 
 import sys
 import os
 
 # Get the absolute path to the project root
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Define the src directory path
 SRC_PATH = os.path.join(PROJECT_ROOT, 'src')
