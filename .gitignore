@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# Environment Variables
+.env
+
+# Credentials and Tokens
+credentials/credentials.json
+credentials/token.pickle
+logs/
+src/email_retrieval.log
+
+# IDEs
+.vscode/
+.idea/

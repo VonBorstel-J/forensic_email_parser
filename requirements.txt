@@ -1,0 +1,36 @@
+# Gmail API Integration
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+
+# Environment Variable Management
+python-dotenv
+
+# Email Parsing and NLP
+spaCy
+
+# HTTP Requests for API Integration
+requests
+
+
+# Flask Web Framework for User Interface
+Flask
+Flask-Login
+Flask-WTF
+
+# Security and Form Handling
+WTForms
+
+# Testing Frameworks
+pytest
+pytest-mock
+
+# Code Quality and Linting 
+flake8
+black
+
+# Containerization (Docker-related dependencies are not Python packages, but you can include docker-compose if needed)
+# docker-compose==1.29.2  
+
+# Additional Utilities
+python-dotenv
