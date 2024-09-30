@@ -16,9 +16,16 @@ env/
 # Credentials and Tokens
 credentials/credentials.json
 credentials/token.pickle
+
+# Logs
 logs/
-src/email_retrieval.log
+
+# Source Logs (if any)
+src/*.log
 
 # IDEs
 .vscode/
 .idea/
+
+# Others
+*.DS_Store
