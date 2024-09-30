@@ -2,10 +2,10 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-from src.parsers.parser_factory import ParserFactory
-from src.parsers.rule_based_parser import RuleBasedParser
-from src.parsers.llm_parser import LLMParser
-from src.parsers.local_llm_parser import LocalLLMParser
+from parsers.parser_factory import ParserFactory
+from parsers.rule_based_parser import RuleBasedParser
+from parsers.llm_parser import LLMParser
+from parsers.local_llm_parser import LocalLLMParser
 
 
 

@@ -1,7 +1,10 @@
+#test_email_retrieval
+
 import unittest
 from unittest.mock import patch, MagicMock
 from pathlib import Path
-from src.email_retrieval import EmailRetrievalModule
+from email_retrieval import EmailRetrievalModule
+import pytest
 
 class TestEmailRetrievalModule(unittest.TestCase):
     @patch('src.email_retrieval.build')

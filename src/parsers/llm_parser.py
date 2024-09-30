@@ -4,9 +4,9 @@ import logging
 import json
 from typing import Dict, Any
 import openai
-from .base_parser import BaseParser
+from openai import OpenAIError, RateLimitError, APIError, Timeout
 from utils.config import Config
-from openai.error import OpenAIError, RateLimitError, APIError, Timeout
+from .base_parser import BaseParser
 
 
 class LLMParser(BaseParser):
