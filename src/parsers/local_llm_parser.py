@@ -1,67 +1,92 @@
-# src/parsers/local_llm_parser.py
+# local_llm_parser.py
 
 import logging
 import json
 from typing import Dict, Any
-
 import requests
-
+from requests.exceptions import RequestException, HTTPError, Timeout, ConnectionError
 from .base_parser import BaseParser
 from utils.config import Config
 
 
 class LocalLLMParser(BaseParser):
-    """
-    An LLM-based parser that uses a locally hosted LLM to extract data from forensic engineering emails.
-    """
+    """An LLM-based parser that uses a locally hosted LLM to extract data from forensic engineering emails."""
 
     def __init__(self):
-        self.api_endpoint = Config.LOCAL_LLM_API_ENDPOINT  # e.g., "http://localhost:8000/v1/chat/completions"
-        self.logger = logging.getLogger(self.__class__.__name__)
+        super().__init__()
+        self.api_endpoint = (
+            Config.LOCAL_LLM_API_ENDPOINT
+        )  # e.g., "http://localhost:8000/v1/chat/completions"
 
     def parse(self, email_content: str) -> Dict[str, Any]:
-        """
-        Parse the email content using a local LLM to extract relevant data fields.
-
-        :param email_content: The raw content of the email.
-        :return: A dictionary containing the extracted data.
-        """
-        preprocessed_content = self.preprocess_email(email_content)
-        extracted_data = {}
-
-        prompt = self.construct_prompt(preprocessed_content)
-
-        payload = {
-            "model": "gpt-4",  # Adjust based on the local model's name
-            "messages": [
-                {"role": "system", "content": "You are an assistant that extracts structured data from forensic engineering emails."},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.2,
-            "max_tokens": 500
-        }
-
+        """Parse the email content using a local LLM to extract relevant data fields."""
         try:
-            response = requests.post(self.api_endpoint, json=payload, timeout=30)
-            response.raise_for_status()
-            ai_response = response.json().get('choices', [{}])[0].get('message', {}).get('content', '')
+            preprocessed_content = self.preprocess_email(email_content)
+            prompt = self.construct_prompt(preprocessed_content)
+            ai_response = self.call_local_llm_api(prompt)
             self.logger.debug(f"AI response: {ai_response}")
 
             extracted_data = self.parse_ai_response(ai_response)
+            return extracted_data
 
-        except requests.exceptions.RequestException as e:
-            self.logger.error(f"Local LLM API request failed: {str(e)}")
+        except Exception as e:
+            self.logger.exception("Error during local LLM parsing.")
             raise
 
-        return extracted_data
+    def call_local_llm_api(self, prompt: str) -> str:
+        """Call the local LLM API with error handling and retries."""
+        max_retries = 3
+        payload = {
+            "model": "gpt-4",  # Adjust based on the local model's name
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are an assistant that extracts structured data from forensic engineering emails.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.2,
+            "max_tokens": 500,
+        }
+
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(self.api_endpoint, json=payload, timeout=30)
+                response.raise_for_status()
+                json_response = response.json()
+                ai_response = (
+                    json_response.get("choices", [{}])[0]
+                    .get("message", {})
+                    .get("content", "")
+                )
+                if not ai_response:
+                    self.logger.error("Empty response from local LLM API.")
+                    raise ValueError("Received empty response from local LLM API.")
+                return ai_response
+
+            except (HTTPError, ConnectionError, Timeout) as e:
+                self.logger.warning(
+                    "Local LLM API error on attempt %d: %s", attempt + 1, str(e)
+                )
+                if attempt < max_retries - 1:
+                    self.logger.info("Retrying local LLM API request...")
+                    continue
+                else:
+                    raise
+            except ValueError as e:
+                self.logger.error("Invalid response from local LLM API: %s", str(e))
+                raise
+            except RequestException as e:
+                self.logger.error(
+                    "RequestException during local LLM API call: %s", str(e)
+                )
+                raise
+            except Exception as e:
+                self.logger.exception("Unexpected error during local LLM API call.")
+                raise
 
     def construct_prompt(self, email_content: str) -> str:
-        """
-        Construct a prompt for the local LLM based on the email content.
-
-        :param email_content: Preprocessed email content.
-        :return: AI prompt string.
-        """
+        """Construct a prompt for the local LLM based on the email content."""
         prompt = (
             "Extract the following fields from the given forensic engineering email and provide the data in JSON format. "
             "Ensure that all fields are present and correctly populated.\n\n"
@@ -102,65 +127,25 @@ class LocalLLMParser(BaseParser):
             "- Attachments\n\n"
             "Email Content:\n"
             f"{email_content}\n\n"
-            "Provide the extracted data in the following JSON format:\n"
-            "{\n"
-            '  "Requesting Party Insurance Company": "",\n'
-            '  "Handler": "",\n'
-            '  "Carrier Claim Number": "",\n'
-            '  "Insured Information": {\n'
-            '    "Name": "",\n'
-            '    "Contact #": "",\n'
-            '    "Loss Address": "",\n'
-            '    "Public Adjuster": "",\n'
-            '    "Ownership": ""\n'
-            '  },\n'
-            '  "Adjuster Information": {\n'
-            '    "Adjuster Name": "",\n'
-            '    "Adjuster Phone Number": "",\n'
-            '    "Adjuster Email": "",\n'
-            '    "Job Title": "",\n'
-            '    "Address": "",\n'
-            '    "Policy Number": ""\n'
-            '  },\n'
-            '  "Assignment Information": {\n'
-            '    "Date of Loss/Occurrence": "",\n'
-            '    "Cause of loss": "",\n'
-            '    "Facts of Loss": "",\n'
-            '    "Loss Description": "",\n'
-            '    "Residence Occupied During Loss": "",\n'
-            '    "Someone home at time of damage": "",\n'
-            '    "Repair or Mitigation Progress": "",\n'
-            '    "Type": "",\n'
-            '    "Inspection type": ""\n'
-            '  },\n'
-            '  "Assignment Type": {\n'
-            '    "Wind": false,\n'
-            '    "Structural": false,\n'
-            '    "Hail": false,\n'
-            '    "Foundation": false,\n'
-            '    "Other": false\n'
-            '  },\n'
-            '  "Additional details/Special Instructions": "",\n'
-            '  "Attachments": ""\n'
-            "}\n"
+            "Provide the extracted data in JSON format."
         )
         return prompt
 
     def parse_ai_response(self, ai_response: str) -> Dict[str, Any]:
-        """
-        Parse the local LLM model's response to extract the validated data.
-
-        :param ai_response: The raw response string from the local LLM model.
-        :return: Validated data dictionary.
-        """
+        """Parse the local LLM model's response to extract the validated data."""
         try:
-            # Extract JSON part from the response
-            json_start = ai_response.find('{')
-            json_end = ai_response.rfind('}') + 1
+            json_start = ai_response.find("{")
+            json_end = ai_response.rfind("}") + 1
+            if json_start == -1 or json_end == -1:
+                self.logger.error("JSON not found in AI response.")
+                raise ValueError("Local LLM response does not contain valid JSON.")
             json_str = ai_response[json_start:json_end]
             validated_data = json.loads(json_str)
             self.logger.info("Local LLM-assisted validation successful.")
             return validated_data
         except json.JSONDecodeError as e:
-            self.logger.error("Failed to parse local LLM response as JSON.")
+            self.logger.error("Failed to parse local LLM response as JSON: %s", str(e))
+            raise
+        except Exception as e:
+            self.logger.exception("Unexpected error while parsing local LLM response.")
             raise
