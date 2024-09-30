@@ -8,10 +8,13 @@ python-dotenv
 
 # Email Parsing and NLP
 spaCy
+openai
+transformers
+torch
+langchain
 
 # HTTP Requests for API Integration
 requests
-
 
 # Flask Web Framework for User Interface
 Flask
@@ -21,16 +24,64 @@ Flask-WTF
 # Security and Form Handling
 WTForms
 
+# Data Validation and Processing
+jsonschema
+pydantic
+pandas
+
+# Quickbase Integration
+# If using a Quickbase SDK, uncomment the following line:
+# quickbase-client
+
 # Testing Frameworks
 pytest
 pytest-mock
+unittest
 
-# Code Quality and Linting 
+# Code Quality and Linting
 flake8
 black
+isort
 
-# Containerization (Docker-related dependencies are not Python packages, but you can include docker-compose if needed)
-# docker-compose==1.29.2  
+# Logging
+loguru
 
-# Additional Utilities
-python-dotenv
+# Asynchronous Processing 
+aiohttp
+asyncio
+
+# Task Scheduling 
+APScheduler
+
+# Database Integration 
+SQLAlchemy
+psycopg2-binary
+
+# Containerization (Docker-related dependencies are not Python packages)
+# docker-compose
+
+# Utilities
+tqdm
+numpy
+
+# Email Parsing
+email-parser
+
+# Additional NLP Utilities
+nltk
+
+# File Handling
+python-multipart
+
+# Frontend Integration 
+Jinja2
+
+# Security Enhancements
+bcrypt
+itsdangerous
+
+# Optional: Local LLM Hosting
+# additional packages required depending on the model and framework.
+
+# Documentation
+sphinx
