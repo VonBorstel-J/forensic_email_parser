@@ -5,6 +5,8 @@ import requests
 from typing import Dict, Any
 from utils.config import Config
 from data_validation import AssignmentSchema
+import json
+from logging.handlers import RotatingFileHandler
 
 
 class QuickbaseIntegrationError(Exception):
@@ -14,10 +16,11 @@ class QuickbaseIntegrationError(Exception):
 
 
 class QuickbaseIntegrator:
-    """Handles integration with Quickbase API."""
+    """Handles integration with QuickBase API."""
 
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.setup_logger()
         self.api_url = Config.QUICKBASE_API_URL
         self.user_token = Config.QUICKBASE_USER_TOKEN
         self.realm_hostname = Config.QUICKBASE_REALM_HOSTNAME
@@ -30,13 +33,26 @@ class QuickbaseIntegrator:
         }
         self.logger.info("QuickbaseIntegrator initialized with provided configuration.")
 
+    def setup_logger(self):
+        """Sets up a rotating file handler for logging."""
+        handler = RotatingFileHandler(
+            Config.LOG_FILE, maxBytes=5 * 1024 * 1024, backupCount=5
+        )
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+        self.logger.setLevel(logging.DEBUG)  # Set to DEBUG for detailed logs
+
     def map_data_to_quickbase(self, data: AssignmentSchema) -> Dict[str, Any]:
         """
-        Maps the validated AssignmentSchema data to Quickbase fields.
-        Adjust the field mappings based on your Quickbase table schema.
+        Maps the validated AssignmentSchema data to QuickBase fields.
+        Adjust the field mappings based on your QuickBase table schema.
         """
         try:
-            self.logger.debug("Mapping data to Quickbase fields.")
+            self.logger.debug("Mapping data to QuickBase fields.")
             mapped_data = {
                 "6": {
                     "value": data.requesting_party.insurance_company
@@ -117,49 +133,88 @@ class QuickbaseIntegrator:
                     )
                 },  # Attachments
             }
-            self.logger.debug(f"Mapped data: {mapped_data}")
+            self.logger.debug(f"Mapped data: {json.dumps(mapped_data, indent=4)}")
             return mapped_data
         except Exception as e:
-            self.logger.exception("Error during data mapping to Quickbase fields.")
-            raise QuickbaseIntegrationError(f"Data mapping failed: {str(e)}")
+            self.logger.exception("Error during data mapping to QuickBase fields.")
+            raise QuickbaseIntegrationError(f"Data mapping failed: {str(e)}") from e
 
     def insert_record(self, data: AssignmentSchema) -> Dict[str, Any]:
         """
-        Inserts a validated record into Quickbase.
+        Inserts a validated record into QuickBase.
         """
         try:
-            self.logger.info("Preparing to insert record into Quickbase.")
+            self.logger.info("Preparing to insert record into QuickBase.")
             mapped_data = self.map_data_to_quickbase(data)
             payload = {"to": self.table_id, "data": [{"fields": mapped_data}]}
-            self.logger.debug(f"Payload for Quickbase API: {payload}")
-            self.logger.info("Sending data to Quickbase API.")
-            response = requests.post(
-                self.api_url, headers=self.headers, json=payload, timeout=30
+            self.logger.debug(
+                f"Payload for QuickBase API: {json.dumps(payload, indent=4)}"
             )
-            response.raise_for_status()
+            self.logger.info("Sending data to QuickBase API.")
+            response = requests.post(
+                self.api_url,
+                headers=self.headers,
+                json=payload,
+                timeout=30,  # Timeout after 30 seconds
+            )
+            response.raise_for_status()  # Raise HTTPError for bad responses
             result = response.json()
-            self.logger.info(f"Successfully inserted record into Quickbase: {result}")
+            self.logger.info(
+                f"Successfully inserted record into QuickBase: {json.dumps(result, indent=4)}"
+            )
             return result
         except requests.exceptions.HTTPError as http_err:
             self.logger.error(
                 f"HTTP error occurred: {http_err} - Response: {response.text}"
             )
-            raise QuickbaseIntegrationError(f"HTTP error: {http_err}")
+            raise QuickbaseIntegrationError(f"HTTP error: {http_err}") from http_err
         except requests.exceptions.Timeout:
-            self.logger.error("Request to Quickbase API timed out.")
-            raise QuickbaseIntegrationError("Quickbase API request timed out.")
+            self.logger.error("Request to QuickBase API timed out.")
+            raise QuickbaseIntegrationError("QuickBase API request timed out.")
         except requests.exceptions.RequestException as req_err:
             self.logger.error(f"Request exception: {req_err}")
-            raise QuickbaseIntegrationError(f"Request error: {req_err}")
+            raise QuickbaseIntegrationError(f"Request error: {req_err}") from req_err
         except Exception as e:
-            self.logger.exception("Unexpected error during Quickbase record insertion.")
-            raise QuickbaseIntegrationError(f"Insertion failed: {str(e)}")
+            self.logger.exception("Unexpected error during QuickBase record insertion.")
+            raise QuickbaseIntegrationError(f"Insertion failed: {str(e)}") from e
+
+    def verify_record_insertion(self, record_id: str) -> bool:
+        """
+        Verifies that the record has been successfully inserted into QuickBase.
+        """
+        try:
+            self.logger.info(f"Verifying insertion of record ID: {record_id}")
+            # Construct the query to fetch the record
+            query_url = f"{self.api_url}/{record_id}"
+            self.logger.debug(f"Query URL for verification: {query_url}")
+            response = requests.get(query_url, headers=self.headers, timeout=30)
+            response.raise_for_status()
+            record = response.json()
+            self.logger.info(
+                f"Record verification successful: {json.dumps(record, indent=4)}"
+            )
+            return True
+        except requests.exceptions.HTTPError as http_err:
+            self.logger.error(
+                f"HTTP error during verification: {http_err} - Response: {response.text}"
+            )
+            return False
+        except requests.exceptions.Timeout:
+            self.logger.error("Verification request to QuickBase API timed out.")
+            return False
+        except requests.exceptions.RequestException as req_err:
+            self.logger.error(f"Request exception during verification: {req_err}")
+            return False
+        except Exception as e:
+            self.logger.exception(f"Unexpected error during record verification: {e}")
+            return False
 
 
 # Example usage
 if __name__ == "__main__":
     import json
-    from data_validation import AssignmentSchema
+    from data_validation import AssignmentSchema, AssignmentTypeEnum
+    from datetime import date
 
     # Sample validated data (replace with actual validated AssignmentSchema instance)
     sample_validated_data = AssignmentSchema(
@@ -206,5 +261,15 @@ if __name__ == "__main__":
     try:
         result = integrator.insert_record(sample_validated_data)
         print("Record inserted successfully:", json.dumps(result, indent=4))
+        # Assuming the response contains the record ID, adjust according to actual API response
+        record_id = result.get("data", [{}])[0].get("id")
+        if record_id:
+            verification = integrator.verify_record_insertion(record_id)
+            if verification:
+                print(f"Record ID {record_id} verified successfully in QuickBase.")
+            else:
+                print(f"Failed to verify Record ID {record_id} in QuickBase.")
+        else:
+            print("Record ID not found in the response.")
     except QuickbaseIntegrationError as e:
         print(f"Failed to insert record: {e}")

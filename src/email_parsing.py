@@ -1,11 +1,7 @@
-# email_parsing.py
+#src\email_parsing.py
 
 """
-Email Parsing Module
-
-This module is responsible for parsing and validating the content of retrieved emails.
-It employs both rule-based parsing and AI-assisted validation using OpenAI's GPT-4 model
-to ensure the extracted data meets specific criteria.
+This module handles the parsing and validation of forensic engineering emails.
 """
 
 import logging
@@ -14,13 +10,11 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 
-import openai
+import openai  # noqa: E1101 - Ignore Pylint no-member error for now
 from openai import OpenAIError
 
 from parsers.parser_factory import ParserFactory
 from utils.config import Config
-
-# Import the email retrieval module
 from email_retrieval import (
     retrieve_unread_emails,
     EmailRetrievalError,
@@ -51,54 +45,46 @@ class EmailParser:
     """Handles the parsing and validation of forensic engineering emails."""
 
     def __init__(self, parser_factory: ParserFactory = None, config: Config = None):
-        """
-        Initializes the EmailParser with necessary dependencies.
-
-        :param parser_factory: An instance of ParserFactory.
-        :param config: An instance of Config for configuration settings.
-        """
         self.parser_factory = parser_factory or ParserFactory()
         self.config = config or Config()
         self.openai_api_key = self.config.OPENAI_API_KEY
         openai.api_key = self.openai_api_key
 
-    def parse_email(self, email_content: str) -> Dict[str, Any]:
+    def parse_email(
+        self, email_id: str, email_content: str, user_preferences: dict = None
+    ) -> Dict[str, Any]:
         """
         Parses the email content and extracts relevant data with validation.
-
-        :param email_content: The content of the email to parse.
-        :return: Validated and possibly enriched data extracted from the email.
-        :raises EmailParsingError: If parsing or validation fails.
         """
         try:
-            logger.info("Starting email parsing process.")
+            logger.info("Starting parsing for email ID %s.", email_id)
 
-            # Layer 1: Automated Validation using Rule-Based Parser
-            parser = self.parser_factory.get_parser(email_content)
-            logger.info("Selected parser: %s", parser.__class__.__name__)
+            parser = self.parser_factory.get_parser(
+                email_content, email_id, user_preferences
+            )
+            logger.info(
+                "Email ID %s: Selected parser %s", email_id, parser.__class__.__name__
+            )
             extracted_data = parser.parse(email_content)
-            logger.debug("Extracted data from parser: %s", extracted_data)
+            logger.debug("Email ID %s: Extracted data: %s", email_id, extracted_data)
 
             if not self.automated_validation(extracted_data):
-                logger.warning("Automated validation failed.")
+                logger.warning("Automated validation failed for email ID %s.", email_id)
                 raise EmailParsingError("Automated validation failed.")
 
-            # Layer 2: AI-Assisted Review using LLM
             ai_validated_data = self.ai_assisted_review(extracted_data)
 
-            logger.info("Email parsing and validation successful.")
+            logger.info(
+                "Email parsing and validation successful for email ID %s.", email_id
+            )
             return ai_validated_data
         except (EmailParsingError, OpenAIError, EmailRetrievalError) as e:
-            logger.error("Error in email parsing: %s", str(e))
-            raise EmailParsingError(f"Error in email parsing: {str(e)}") from e
+            logger.error("Error parsing email ID %s: %s", email_id, str(e))
+            raise EmailParsingError(
+                f"Error parsing email ID {email_id}: {str(e)}"
+            ) from e
 
     def automated_validation(self, extracted_data: Dict[str, Any]) -> bool:
-        """
-        Performs basic validation on the extracted data.
-
-        :param extracted_data: The data extracted from the email.
-        :return: True if validation passes, False otherwise.
-        """
         required_fields = [
             "Carrier Claim Number",
             "Insured Information",
@@ -112,13 +98,6 @@ class EmailParser:
         return True
 
     def ai_assisted_review(self, extracted_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Performs AI-assisted validation using OpenAI's GPT model.
-
-        :param extracted_data: The data extracted from the email.
-        :return: Validated and possibly enriched data.
-        :raises EmailParsingError: If AI-assisted validation fails.
-        """
         try:
             prompt = self.construct_prompt(extracted_data)
             response = openai.ChatCompletion.create(
@@ -126,13 +105,13 @@ class EmailParser:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an assistant specialized in validating extracted data from emails.",
+                        "content": "You are an assistant specialized in validating extracted data.",
                     },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.2,
                 max_tokens=500,
-            )  # pylint: disable=no-member
+            )
             validated_data = json.loads(response.choices[0].message["content"])
             logger.debug("AI-assisted validated data: %s", validated_data)
             return validated_data
@@ -146,18 +125,7 @@ class EmailParser:
             ) from e
 
     def construct_prompt(self, extracted_data: Dict[str, Any]) -> str:
-        """
-        Constructs a detailed prompt for LLM validation.
-
-        :param extracted_data: The data extracted from the email.
-        :return: The constructed prompt string.
-        """
-        prompt = (
-            "You are an assistant specialized in validating extracted data from emails. "
-            "Please review the following fields for accuracy, completeness, and consistency. "
-            "If any discrepancies are found, highlight them and suggest corrections. "
-            "Provide the validated data in well-formatted JSON.\n\n"
-        )
+        prompt = "Please validate the following extracted data for accuracy and consistency:\n\n"
         for key, value in extracted_data.items():
             prompt += f"{key}: {value}\n"
         return prompt
@@ -168,7 +136,6 @@ def process_emails():
     Retrieves unread emails, parses and validates them, and marks them as read upon successful processing.
     """
     try:
-        # Retrieve unread emails
         unread_emails = retrieve_unread_emails(max_results=100)
         logger.info("Number of unread emails retrieved: %d", len(unread_emails))
 
@@ -176,20 +143,19 @@ def process_emails():
             logger.info("No unread emails to process.")
             return
 
-        # Initialize the parser
         parser = EmailParser()
 
         for email in unread_emails:
             email_id = email.get("id")
             try:
-                # Extract email content (assuming 'snippet' contains the necessary info)
                 email_content = email.get("snippet", "")
-                parsed_data = parser.parse_email(email_content)
+                user_preferences = {}
+
+                parsed_data = parser.parse_email(
+                    email_id, email_content, user_preferences
+                )
                 logger.info("Parsed data for email ID %s: %s", email_id, parsed_data)
 
-                # Further processing can be done here (e.g., storing data in a database)
-
-                # Mark the email as read after successful processing
                 email_module = EmailRetrievalModule(
                     credentials_path=Path(
                         os.getenv("CREDENTIALS_PATH", "credentials/credentials.json")
@@ -201,13 +167,12 @@ def process_emails():
 
             except EmailParsingError as e:
                 logger.error("Parsing failed for email ID %s: %s", email_id, e)
-                # Optionally, implement retry logic or flag the email for manual review
+            except Exception as e:
+                logger.exception(
+                    "Unexpected error processing email ID %s: %s", email_id, e
+                )
 
     except EmailRetrievalError as e:
-        logger.error("Failed to process emails: %s", e)
+        logger.error("Failed to retrieve emails: %s", e)
     except Exception as e:
-        logger.error("An unexpected error occurred: %s", e)
-
-
-if __name__ == "__main__":
-    process_emails()
+        logger.exception("An unexpected error occurred while processing emails.")

@@ -1,0 +1,686 @@
+Introduction
+
+This master plan is designed to guide you and the LLM through the completion of the Automated Email Parsing and Data Integration System within a single day. The plan is comprehensive and self-contained, ensuring that the LLM has all the necessary context to assist effectively, even without prior knowledge of the project.
+
+Objectives
+Complete the development of the system today by following a structured, step-by-step plan.
+Ensure all functional requirements are met, including multi-layer validation, user interaction, immersive UI, security, and scalability.
+Produce a detailed README that outlines the system's functionality, setup instructions, features, and user roles.
+High-Level Tasks
+Review and Finalize System Architecture
+Implement Backend Enhancements
+Develop Frontend Components
+Integrate LLMs for Parsing
+Enhance Security Measures
+Optimize for Scalability and Performance
+Create Detailed Documentation (README)
+Test and Deploy the System
+Detailed Action Plan
+1. Review and Finalize System Architecture
+
+Time Allocation: 1 hour
+
+Examine Current File Structure
+
+Review all existing files to understand the current state.
+Identify any missing components or areas needing refinement.
+Define Modular Components
+
+Backend Services:
+Email Retrieval Service (email_retrieval.py)
+Parsing Service with ParserFactory (parser_factory.py)
+Validation Service (data_validation.py)
+QuickBase Integration Service (quickbase_integration.py)
+Authentication Service (to be implemented)
+Frontend Components:
+Dashboard (Dashboard.tsx)
+Data Review Interface (DataReview.tsx)
+Authentication (Login.tsx)
+Navigation (Navbar.tsx) and Footer (Footer.tsx)
+Visualize Architecture
+
+Sketch a simple architecture diagram to visualize component interactions.
+Define the data flow from email retrieval to QuickBase integration.
+2. Implement Backend Enhancements
+Time Allocation: 3 hours
+
+Enhance ParserFactory (parser_factory.py)
+
+Ensure it dynamically selects between rule-based, AI, and local LLM parsers based on email content and user preferences.
+Add logging to record which parser is used for each email.
+Update Email Retrieval (email_retrieval.py)
+
+Implement error handling and retry mechanisms.
+Use asynchronous processing to handle multiple emails concurrently.
+Complete Data Validation (data_validation.py)
+
+Implement all necessary validation rules.
+Integrate AI-assisted validation where applicable.
+Finish QuickBase Integration (quickbase_integration.py)
+
+Ensure data is correctly formatted and securely transmitted.
+Implement confirmation of successful data transfer and error logging.
+Implement Authentication Service
+
+Set up JWT-based authentication.
+Secure all API endpoints.
+Define user roles (Admin, Analyst, Viewer) and permissions.
+Logging and Monitoring
+
+Standardize logging across all modules.
+Ensure logs are secure and do not expose sensitive information.
+3. Develop Frontend Components
+Time Allocation: 3 hours
+
+Set Up State Management
+
+Choose between Redux or Context API.
+Implement global state management in src/store/index.ts.
+Implement User Authentication (Login.tsx and AuthContext.tsx)
+
+Connect frontend authentication to backend service.
+Ensure secure handling of user credentials.
+Build Dashboard (Dashboard.tsx)
+
+Display processing status, recent activities, and system metrics.
+Include toggles for automated and manual modes.
+Develop Data Review Interface (DataReview.tsx)
+
+Allow users to review, validate, and approve parsed data.
+Visualize the multi-layer validation stages.
+Enhance Navigation and Layout
+
+Finalize Navbar.tsx with links to different sections and user info.
+Implement Footer.tsx with relevant information.
+Add UI Animations and Visuals
+
+Use CSS animations or libraries like Framer Motion.
+Provide visual feedback during data processing stages.
+4. Integrate LLMs for Parsing
+Time Allocation: 2 hours
+
+Set Up Local LLM Parser (local_llm_parser.py)
+
+Install and configure a local LLM (e.g., GPT-2 or GPT-Neo).
+Ensure it can parse emails as per requirements.
+Configure AI Parser (llm_parser.py)
+
+Securely integrate with cloud-based LLM APIs (e.g., OpenAI GPT-4).
+Implement data anonymization if required by compliance.
+Update ParserFactory
+
+Ensure it selects the appropriate parser based on:
+Email content complexity.
+User's mode (automated or manual).
+Data sensitivity.
+5. Enhance Security Measures
+Time Allocation: 1.5 hours
+
+Secure Backend APIs
+
+Implement input validation and sanitization.
+Enforce HTTPS using SSL certificates.
+Encrypt Data
+
+Use encryption for data at rest (e.g., AES-256).
+Ensure all data in transit is encrypted.
+Ensure Compliance
+
+Review code for GDPR/HIPAA compliance.
+Implement necessary data handling and privacy measures.
+Update Dependencies
+
+Ensure all packages and libraries are up to date.
+Run vulnerability scans using tools like npm audit and pip-audit.
+6. Optimize for Scalability and Performance
+Time Allocation: 1 hour
+
+Backend Optimization
+
+Use asynchronous functions to improve concurrency.
+Optimize database queries and API calls.
+Frontend Optimization
+
+Implement code splitting and lazy loading.
+Optimize images and static assets.
+Set Up Caching
+
+Use caching mechanisms where appropriate (e.g., Redis for backend caching).
+7. Create Detailed Documentation (README)
+Time Allocation: 1 hour
+
+Draft README.md
+
+Project Title and Description
+
+"Automated Email Parsing and Data Integration System"
+Briefly explain the purpose and key features.
+Table of Contents
+
+Installation Guide
+
+Prerequisites:
+Python 3.x, Node.js, npm.
+Virtual environment tools.
+Backend Setup:
+Clone repository.
+Create and activate virtual environment.
+Install dependencies using pip install -r requirements.txt.
+Set up environment variables and API keys.
+Frontend Setup:
+Navigate to email-parser-ui.
+Install dependencies using npm install.
+Start the development server with npm start.
+Usage Instructions
+
+How to run the backend server.
+How to use the application in automated and manual modes.
+Explanation of the user interface and features.
+Features
+
+Automated and Manual Modes.
+Multi-Layer Validation.
+User Roles and Permissions.
+Security Measures.
+Scalability Features.
+System Architecture
+
+Overview of the system components.
+Include architecture diagram (if possible).
+API Documentation
+
+List and describe API endpoints.
+Security and Compliance
+
+Details on authentication, authorization, and data protection.
+Contributing
+
+Guidelines for contributing to the project.
+License
+
+Add Inline Documentation
+
+Ensure all code modules and functions have docstrings/comments.
+8. Test and Deploy the System
+Time Allocation: 2 hours
+
+Testing
+
+Unit Tests
+
+Write tests for critical functions in backend modules.
+Use pytest for running tests.
+Integration Tests
+
+Test API endpoints using tools like Postman or automated scripts.
+Frontend Testing
+
+Test component rendering and user interactions.
+Security Testing
+
+Run security scans.
+Verify that all vulnerabilities are addressed.
+Deployment
+
+Prepare Production Environment
+
+Set up servers or hosting services.
+Configure environment variables for production.
+Deploy Backend
+
+Use tools like Gunicorn and Nginx for deployment.
+Ensure the server is accessible and secure.
+Deploy Frontend
+
+Build the production version using npm run build.
+Serve static files using a web server.
+Post-Deployment Testing
+
+Perform a final round of testing in the production environment.
+Time Management Summary
+Total Estimated Time: 14.5 hours
+Be prepared to adjust as needed based on progress.
+Prioritize critical functionality and address any blockers immediately.
+Collaboration with LLM
+Effective Communication
+
+Provide clear, concise prompts to the LLM.
+Break down tasks into smaller, manageable parts.
+Example Prompts
+
+For Code Generation:
+
+"Write a Python function that validates email addresses using regex."
+"Implement a React component for displaying a progress bar with animations."
+For Debugging Assistance:
+
+"I receive an error when trying to authenticate users. Here's the error message: [error]. How can I fix this?"
+For Documentation:
+
+"Generate a README section explaining how to set up the backend environment."
+Review LLM Outputs
+
+Always review and test code provided by the LLM.
+Verify that the outputs meet security and compliance requirements.
+Key Focus Areas
+Security
+
+Double-check all authentication and authorization mechanisms.
+Ensure sensitive data is protected at all times.
+User Experience
+
+The UI should be intuitive and responsive.
+Visual feedback should guide the user through processes seamlessly.
+Functionality
+
+Multi-layer validation must work correctly in both automated and manual modes.
+The system should handle errors gracefully and provide meaningful messages.
+Final Checklist
+ All backend services are fully implemented and tested.
+ Frontend components are complete and connected to backend APIs.
+ LLM parsers are integrated and functioning as expected.
+ Security measures are in place and verified.
+ Performance optimizations are implemented.
+ README and documentation are complete and clear.
+ The system is tested end-to-end in both development and production environments.
+ Deployment is successful, and the system is operational.
+
+
+
+
+
+
+
+
+
+Prompt: 
+Hello!
+
+I need your assistance to complete an Automated Email Parsing and Data Integration System today. This system is for a forensic engineering firm and includes features such as:
+
+Automated and Manual Email Processing Modes
+Multi-Layer Validation (rule-based parsing, AI-assisted review, and manual validation)
+Human-User Interaction Points with visual cues and an immersive UI
+Scalability and Security Measures, including compliance with GDPR/HIPAA standards
+I have a detailed master plan that outlines all the tasks and objectives needed to complete the project. Here is the master plan:
+
+Master Plan for Completing the Automated Email Parsing and Data Integration System Today
+Introduction
+
+This master plan is designed to guide you and the LLM through the completion of the Automated Email Parsing and Data Integration System within a single day. The plan is comprehensive and self-contained, ensuring that the LLM has all the necessary context to assist effectively, even without prior knowledge of the project.
+
+Objectives
+Complete the development of the system today by following a structured, step-by-step plan.
+Ensure all functional requirements are met, including multi-layer validation, user interaction, immersive UI, security, and scalability.
+Produce a detailed README that outlines the system's functionality, setup instructions, features, and user roles.
+High-Level Tasks
+Review and Finalize System Architecture
+Implement Backend Enhancements
+Develop Frontend Components
+Integrate LLMs for Parsing
+Enhance Security Measures
+Optimize for Scalability and Performance
+Create Detailed Documentation (README)
+Test and Deploy the System
+Detailed Action Plan
+1. Review and Finalize System Architecture
+
+Time Allocation: 1 hour
+
+Examine Current File Structure
+
+Review all existing files to understand the current state.
+Identify any missing components or areas needing refinement.
+Define Modular Components
+
+Backend Services:
+Email Retrieval Service (email_retrieval.py)
+Parsing Service with ParserFactory (parser_factory.py)
+Validation Service (data_validation.py)
+QuickBase Integration Service (quickbase_integration.py)
+Authentication Service (to be implemented)
+Frontend Components:
+Dashboard (Dashboard.tsx)
+Data Review Interface (DataReview.tsx)
+Authentication (Login.tsx)
+Navigation (Navbar.tsx) and Footer (Footer.tsx)
+Visualize Architecture
+
+Sketch a simple architecture diagram to visualize component interactions.
+Define the data flow from email retrieval to QuickBase integration.
+2. Implement Backend Enhancements
+Time Allocation: 3 hours
+
+Enhance ParserFactory (parser_factory.py)
+
+Ensure it dynamically selects between rule-based, AI, and local LLM parsers based on email content and user preferences.
+Add logging to record which parser is used for each email.
+Update Email Retrieval (email_retrieval.py)
+
+Implement error handling and retry mechanisms.
+Use asynchronous processing to handle multiple emails concurrently.
+Complete Data Validation (data_validation.py)
+
+Implement all necessary validation rules.
+Integrate AI-assisted validation where applicable.
+Finish QuickBase Integration (quickbase_integration.py)
+
+Ensure data is correctly formatted and securely transmitted.
+Implement confirmation of successful data transfer and error logging.
+Implement Authentication Service
+
+Set up JWT-based authentication.
+Secure all API endpoints.
+Define user roles (Admin, Analyst, Viewer) and permissions.
+Logging and Monitoring
+
+Standardize logging across all modules.
+Ensure logs are secure and do not expose sensitive information.
+3. Develop Frontend Components
+Time Allocation: 3 hours
+
+Set Up State Management
+
+Choose between Redux or Context API.
+Implement global state management in src/store/index.ts.
+Implement User Authentication (Login.tsx and AuthContext.tsx)
+
+Connect frontend authentication to backend service.
+Ensure secure handling of user credentials.
+Build Dashboard (Dashboard.tsx)
+
+Display processing status, recent activities, and system metrics.
+Include toggles for automated and manual modes.
+Develop Data Review Interface (DataReview.tsx)
+
+Allow users to review, validate, and approve parsed data.
+Visualize the multi-layer validation stages.
+Enhance Navigation and Layout
+
+Finalize Navbar.tsx with links to different sections and user info.
+Implement Footer.tsx with relevant information.
+Add UI Animations and Visuals
+
+Use CSS animations or libraries like Framer Motion.
+Provide visual feedback during data processing stages.
+4. Integrate LLMs for Parsing
+Time Allocation: 2 hours
+
+Set Up Local LLM Parser (local_llm_parser.py)
+
+Install and configure a local LLM (e.g., GPT-2 or GPT-Neo).
+Ensure it can parse emails as per requirements.
+Configure AI Parser (llm_parser.py)
+
+Securely integrate with cloud-based LLM APIs (e.g., OpenAI GPT-4).
+Implement data anonymization if required by compliance.
+Update ParserFactory
+
+Ensure it selects the appropriate parser based on:
+Email content complexity.
+User's mode (automated or manual).
+Data sensitivity.
+5. Enhance Security Measures
+Time Allocation: 1.5 hours
+
+Secure Backend APIs
+
+Implement input validation and sanitization.
+Enforce HTTPS using SSL certificates.
+Encrypt Data
+
+Use encryption for data at rest (e.g., AES-256).
+Ensure all data in transit is encrypted.
+Ensure Compliance
+
+Review code for GDPR/HIPAA compliance.
+Implement necessary data handling and privacy measures.
+Update Dependencies
+
+Ensure all packages and libraries are up to date.
+Run vulnerability scans using tools like npm audit and pip-audit.
+6. Optimize for Scalability and Performance
+Time Allocation: 1 hour
+
+Backend Optimization
+
+Use asynchronous functions to improve concurrency.
+Optimize database queries and API calls.
+Frontend Optimization
+
+Implement code splitting and lazy loading.
+Optimize images and static assets.
+Set Up Caching
+
+Use caching mechanisms where appropriate (e.g., Redis for backend caching).
+7. Create Detailed Documentation (README)
+Time Allocation: 1 hour
+
+Draft README.md
+
+Project Title and Description
+
+"Automated Email Parsing and Data Integration System"
+Briefly explain the purpose and key features.
+Table of Contents
+
+Installation Guide
+
+Prerequisites:
+Python 3.x, Node.js, npm.
+Virtual environment tools.
+Backend Setup:
+Clone repository.
+Create and activate virtual environment.
+Install dependencies using pip install -r requirements.txt.
+Set up environment variables and API keys.
+Frontend Setup:
+Navigate to email-parser-ui.
+Install dependencies using npm install.
+Start the development server with npm start.
+Usage Instructions
+
+How to run the backend server.
+How to use the application in automated and manual modes.
+Explanation of the user interface and features.
+Features
+
+Automated and Manual Modes.
+Multi-Layer Validation.
+User Roles and Permissions.
+Security Measures.
+Scalability Features.
+System Architecture
+
+Overview of the system components.
+Include architecture diagram (if possible).
+API Documentation
+
+List and describe API endpoints.
+Security and Compliance
+
+Details on authentication, authorization, and data protection.
+Contributing
+
+Guidelines for contributing to the project.
+License
+
+Add Inline Documentation
+
+Ensure all code modules and functions have docstrings/comments.
+8. Test and Deploy the System
+Time Allocation: 2 hours
+
+Testing
+
+Unit Tests
+
+Write tests for critical functions in backend modules.
+Use pytest for running tests.
+Integration Tests
+
+Test API endpoints using tools like Postman or automated scripts.
+Frontend Testing
+
+Test component rendering and user interactions.
+Security Testing
+
+Run security scans.
+Verify that all vulnerabilities are addressed.
+Deployment
+
+Prepare Production Environment
+
+Set up servers or hosting services.
+Configure environment variables for production.
+Deploy Backend
+
+Use tools like Gunicorn and Nginx for deployment.
+Ensure the server is accessible and secure.
+Deploy Frontend
+
+Build the production version using npm run build.
+Serve static files using a web server.
+Post-Deployment Testing
+
+Perform a final round of testing in the production environment.
+Time Management Summary
+Total Estimated Time: 14.5 hours
+Be prepared to adjust as needed based on progress.
+Prioritize critical functionality and address any blockers immediately.
+Collaboration with LLM
+Effective Communication
+
+Provide clear, concise prompts to the LLM.
+Break down tasks into smaller, manageable parts.
+Example Prompts
+
+For Code Generation:
+
+"Write a Python function that validates email addresses using regex."
+"Implement a React component for displaying a progress bar with animations."
+For Debugging Assistance:
+
+"I receive an error when trying to authenticate users. Here's the error message: [error]. How can I fix this?"
+For Documentation:
+
+"Generate a README section explaining how to set up the backend environment."
+Review LLM Outputs
+
+Always review and test code provided by the LLM.
+Verify that the outputs meet security and compliance requirements.
+Key Focus Areas
+Security
+
+Double-check all authentication and authorization mechanisms.
+Ensure sensitive data is protected at all times.
+User Experience
+
+The UI should be intuitive and responsive.
+Visual feedback should guide the user through processes seamlessly.
+Functionality
+
+Multi-layer validation must work correctly in both automated and manual modes.
+The system should handle errors gracefully and provide meaningful messages.
+Final Checklist
+ All backend services are fully implemented and tested.
+ Frontend components are complete and connected to backend APIs.
+ LLM parsers are integrated and functioning as expected.
+ Security measures are in place and verified.
+ Performance optimizations are implemented.
+ README and documentation are complete and clear.
+ The system is tested end-to-end in both development and production environments.
+ Deployment is successful, and the system is operational.
+
+
+ I would like your help in implementing this plan step by step. Let's begin with the first task:
+
+1. Review and Finalize System Architecture
+Based on the current file structure and components outlined in the master plan, can you help me ensure that the architecture is sound and identify any missing elements?
+
+Current File Structure:
+
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\.pytest_cache
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\.vscode
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\credentials
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\credentials\__init__.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\credentials\credentials.json
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\credentials\token.pickle.lock
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\node_modules
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\public
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\components
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\components\Dashboard.tsx
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\components\DataReview.tsx
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\components\Footer.tsx
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\components\Login.tsx
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\components\Navbar.tsx
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\contexts
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\contexts\AuthContext.tsx
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\services
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\services\api.ts
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\services\auth.ts
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\store
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\store\index.ts
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\utils
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\utils\validators.ts
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\App.tsx
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\index.tsx
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\src\react-app-env.d.ts
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\.gitignore
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\package.json
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\package-lock.json
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\README.md
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\email-parser-ui\tsconfig.json
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\logs
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\__pycache__
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\forensic_email_parser.egg-info
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\parsers
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\parsers\__init__.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\parsers\base_parser.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\parsers\llm_parser.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\parsers\local_llm_parser.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\parsers\parser_factory.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\parsers\rule_based_parser.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\utils
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\utils\__init__.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\utils\config.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\__init__.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\data_validation.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\email_parsing.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\email_retrieval.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\quickbase_integration.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\src\ui.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests\__pycache__
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests\test_parser
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests\__init__.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests\conftest.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests\test_data_validation.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests\test_email_parsing.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests\test_email_retrieval.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests\test_quickbase_integration.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\tests\test_ui.py
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\venv
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\.env
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\.gitignore
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\AssignmentSchema.md
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\eslint.config.mjs
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\masterplan.txt
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\pytest.ini
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\README.md
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\requirements.txt
+C:\Users\jorda\OneDrive\Desktop\Code & Ai\forensic_email_parser\setup.py
+
+Throughout this process, I may need assistance with:
+
+Writing code snippets in Python for the backend and TypeScript/React for the frontend.
+Providing guidance on integrating local and cloud-based LLMs for email parsing.
+Enhancing security measures to ensure compliance with GDPR/HIPAA.
+Writing sections of the README documentation.
+Optimizing for scalability and performance.
+Please let me know if you need any additional information or clarification on any part of the project. If there are any placeholders or sections in the master plan that need to be filled in, I will provide that information as needed.
+
+Thank you!

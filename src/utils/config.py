@@ -38,6 +38,15 @@ class Config:
         "LOCAL_LLM_API_ENDPOINT"
     )  # e.g., "http://localhost:8000/v1/chat/completions"
 
+    # JWT Configuration
+    JWT_SECRET_KEY = os.getenv(
+        "JWT_SECRET_KEY", "default_secret_key"
+    )  # Replace default in production
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(
+        os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+    )
+
 
 # Setup logging configuration
 logging.basicConfig(

@@ -1,4 +1,4 @@
-# email_retrieval.py
+# src/email_retrieval.py
 
 """
 Email Retrieval Module
@@ -10,10 +10,9 @@ It manages authentication, fetches unread emails, and marks them as read after p
 import os
 import pickle
 import logging
-import time
-import random
+import asyncio
 from pathlib import Path
-from typing import List, Callable, Optional
+from typing import List, Optional
 
 from dotenv import load_dotenv
 from google.auth.transport.requests import Request
@@ -22,6 +21,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from filelock import FileLock, Timeout
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 # Load environment variables from .env file
 load_dotenv()
@@ -47,7 +47,6 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 class EmailRetrievalError(Exception):
     """Custom exception for email retrieval errors."""
-
     pass
 
 
@@ -66,11 +65,11 @@ class EmailRetrievalModule:
         self.lock = FileLock(f"{self.token_path}.lock")
         self.service = self.authenticate()
 
-    def authenticate(self) -> object:
+    def authenticate(self) -> Optional[object]:
         """
         Authenticates the user and returns the Gmail API service instance.
 
-        :return: Gmail API service instance.
+        :return: Gmail API service instance or None if authentication fails.
         :raises EmailRetrievalError: If authentication fails.
         """
         creds = None
@@ -132,9 +131,15 @@ class EmailRetrievalModule:
             logging.error("Error during OAuth flow: %s", exc)
             raise EmailRetrievalError(f"Error during OAuth flow: {str(exc)}") from exc
 
-    def get_unread_emails(self, max_results: int = 100) -> List[dict]:
+    @retry(
+        wait=wait_exponential(multiplier=1, min=4, max=60),
+        stop=stop_after_attempt(5),
+        retry=retry_if_exception_type(HttpError),
+        reraise=True,
+    )
+    def get_unread_emails_sync(self, max_results: int = 100) -> List[dict]:
         """
-        Retrieves unread emails from the Gmail inbox.
+        Synchronously retrieves unread emails from the Gmail inbox.
 
         :param max_results: Maximum number of emails to retrieve.
         :return: List of email message objects.
@@ -170,23 +175,35 @@ class EmailRetrievalModule:
                         msg_id,
                         error,
                     )
-                    self.handle_http_error(
-                        error,
-                        lambda: self.service.users()
-                        .messages()
-                        .get(userId="me", id=msg_id, format="full")
-                        .execute(),
-                    )
+                    self.handle_http_error(error)
             return emails
 
         except HttpError as error:
             logging.error("An error occurred during email retrieval: %s", error)
-            self.handle_http_error(error, self.get_unread_emails)
+            self.handle_http_error(error)
             return []
 
-    def mark_as_read(self, email_id: str):
+    async def get_unread_emails(self, max_results: int = 100) -> List[dict]:
         """
-        Marks the specified email as read.
+        Asynchronously retrieves unread emails from the Gmail inbox.
+
+        :param max_results: Maximum number of emails to retrieve.
+        :return: List of email message objects.
+        :raises EmailRetrievalError: If email retrieval fails.
+        """
+        loop = asyncio.get_event_loop()
+        try:
+            emails = await loop.run_in_executor(
+                None, self.get_unread_emails_sync, max_results
+            )
+            return emails
+        except Exception as exc:
+            logging.error("Failed to asynchronously retrieve unread emails: %s", exc)
+            raise EmailRetrievalError(f"Error retrieving emails: {str(exc)}") from exc
+
+    def mark_as_read_sync(self, email_id: str):
+        """
+        Synchronously marks the specified email as read.
 
         :param email_id: The ID of the email to mark as read.
         :raises EmailRetrievalError: If marking as read fails.
@@ -198,86 +215,99 @@ class EmailRetrievalModule:
             logging.info("Marked email ID %s as read.", email_id)
         except HttpError as error:
             logging.error("Failed to mark email ID %s as read: %s", email_id, error)
-            self.handle_http_error(
-                error,
-                lambda: self.service.users()
-                .messages()
-                .modify(userId="me", id=email_id, body={"removeLabelIds": ["UNREAD"]})
-                .execute(),
-            )
+            self.handle_http_error(error)
 
+    @retry(
+        wait=wait_exponential(multiplier=1, min=4, max=60),
+        stop=stop_after_attempt(5),
+        retry=retry_if_exception_type(HttpError),
+        reraise=True,
+    )
     def handle_http_error(
         self,
         error: HttpError,
-        request_callable: Optional[Callable] = None,
-        retries: int = 5,
     ):
         """
         Handles HTTP errors with exponential backoff and retries the failed request if possible.
 
         :param error: The HttpError encountered.
-        :param request_callable: A callable that performs the failed request.
-        :param retries: Number of retries before giving up.
-        :raises HttpError: If all retries fail.
+        :raises HttpError: If all retries fail or if the error is non-retriable.
         """
         if error.resp.status in [429, 500, 503]:
-            for n in range(retries):
-                sleep_time = (2**n) + (random.randint(0, 1000) / 1000)
-                logging.warning(
-                    "Rate limit hit or server error (status %d). Sleeping for %.2f seconds before retry %d.",
-                    error.resp.status,
-                    sleep_time,
-                    n + 1,
-                )
-                time.sleep(sleep_time)
-                if request_callable:
-                    try:
-                        request_callable()
-                        logging.info("Retry successful.")
-                        return
-                    except HttpError as e:
-                        logging.error("Retry %d failed: %s", n + 1, e)
-                        error = e
-                else:
-                    logging.info("No request_callable provided for retry.")
-                    break
-            logging.error("Max retries exceeded.")
-            raise error
+            logging.warning(
+                "Rate limit hit or server error (status %d). Initiating retry mechanism.",
+                error.resp.status,
+            )
+            raise error  # Trigger tenacity retry
         else:
             logging.error("Non-retriable error occurred: %s", error)
             raise error
 
+    async def mark_as_read(self, email_id: str):
+        """
+        Asynchronously marks the specified email as read.
 
-def retrieve_unread_emails(max_results: int = 100) -> List[dict]:
-    """
-    Retrieves unread emails and returns a list of message objects.
+        :param email_id: The ID of the email to mark as read.
+        :raises EmailRetrievalError: If marking as read fails.
+        """
+        loop = asyncio.get_event_loop()
+        try:
+            await loop.run_in_executor(None, self.mark_as_read_sync, email_id)
+        except Exception as exc:
+            logging.error("Failed to asynchronously mark email ID %s as read: %s", email_id, exc)
+            raise EmailRetrievalError(f"Error marking email as read: {str(exc)}") from exc
 
-    :param max_results: Maximum number of unread emails to retrieve.
-    :return: List of unread email messages.
-    :raises EmailRetrievalError: If email retrieval fails.
+
+async def process_email(email_module: EmailRetrievalModule, email: dict):
     """
+    Asynchronously processes a single email and marks it as read.
+
+    :param email_module: Instance of EmailRetrievalModule.
+    :param email: The email message object to process.
+    """
+    email_id = email.get("id")
     try:
-        email_module = EmailRetrievalModule(
-            credentials_path=CREDENTIALS_PATH, token_path=TOKEN_PATH
+        # Placeholder for email processing logic
+        logging.info("Processing email ID: %s", email_id)
+        # Simulate processing delay
+        await asyncio.sleep(1)
+        # After processing, mark as read
+        await asyncio.wait_for(email_module.mark_as_read(email_id), timeout=30)
+        logging.info("Successfully processed and marked email ID %s as read.", email_id)
+    except asyncio.TimeoutError:
+        logging.error("Timeout occurred while processing email ID: %s", email_id)
+    except EmailRetrievalError as exc:
+        logging.error("Failed to process email ID %s: %s", email_id, exc)
+
+
+async def main():
+    """
+    Main asynchronous function to retrieve and process unread emails concurrently.
+    """
+    email_module = EmailRetrievalModule(
+        credentials_path=CREDENTIALS_PATH, token_path=TOKEN_PATH
+    )
+    try:
+        unread_emails = await email_module.get_unread_emails()
+
+        if not unread_emails:
+            logging.info("No unread emails to process.")
+            return
+
+        # Process emails concurrently
+        results = await asyncio.gather(
+            *(process_email(email_module, email) for email in unread_emails),
+            return_exceptions=True
         )
-        return email_module.get_unread_emails(max_results)
-    except Exception as exc:
-        logging.error("Failed to retrieve unread emails: %s", exc)
-        raise EmailRetrievalError(f"Error retrieving emails: {str(exc)}") from exc
+
+        for result in results:
+            if isinstance(result, Exception):
+                logging.error(f"Error in processing email: {result}")
+
+    except EmailRetrievalError as exc:
+        logging.error("Email retrieval process failed: %s", exc)
 
 
 if __name__ == "__main__":
-    # Example usage
-    try:
-        email_module = EmailRetrievalModule(
-            credentials_path=CREDENTIALS_PATH, token_path=TOKEN_PATH
-        )
-        unread_emails = email_module.get_unread_emails()
-
-        for email in unread_emails:
-            # Process each email as needed
-            print("Email ID: %s" % email.get("id"))
-            # After processing, mark as read
-            email_module.mark_as_read(email.get("id"))
-    except EmailRetrievalError as exc:
-        logging.error("Email retrieval process failed: %s", exc)
+    # Run the main asynchronous function
+    asyncio.run(main())
