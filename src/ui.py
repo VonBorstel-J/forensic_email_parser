@@ -1,4 +1,4 @@
-# src\ui.py
+# src/ui.py
 
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
@@ -11,7 +11,6 @@ from flask_principal import (
     RoleNeed,
 )
 from src.utils.config import Config
-from src.parsers.email_parsing import EmailParsingModule
 from src.auth import (
     setup_authentication,
     admin_permission,
@@ -29,7 +28,7 @@ config = Config()
 
 # Secure Configurations
 app.config["SECRET_KEY"] = config.FLASK_SECRET_KEY or "default_secret_key"  # Graceful fallback for missing key
-app.config["SESSION_COOKIE_SECURE"] = True  # Ensure cookies are only sent over HTTPS
+app.config["SESSION_COOKIE_SECURE"] = False  # Set to True in production
 app.config["SESSION_COOKIE_HTTPONLY"] = True  # Prevent JavaScript access to session cookies
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"  # Prevent CSRF attacks by limiting cross-site requests
 app.config["WTF_CSRF_ENABLED"] = True  # Enable CSRF protection
@@ -155,4 +154,4 @@ def internal_server_error(e):
 
 if __name__ == "__main__":
     # Ensure app runs with production settings when not in debug mode
-    app.run(debug=config.DEBUG)
+    app.run(debug=True)

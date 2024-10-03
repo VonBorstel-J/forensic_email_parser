@@ -1,4 +1,4 @@
-# src\auth.py
+# src/auth.py
 
 import logging
 from flask import (
@@ -27,8 +27,7 @@ from flask_principal import (
     identity_changed,
     AnonymousIdentity,
 )
-from werkzeug.security import generate_password_hash, check_password_hash
-from src.utils.models import get_user_by_username, get_user_by_id, User, users
+from src.utils.models import get_user_by_username, get_user_by_id, User, db
 
 # Configure Logger
 logger = logging.getLogger("authentication")
@@ -86,7 +85,7 @@ def setup_authentication(app):
             username = request.form["username"]
             password = request.form["password"]
             user = get_user_by_username(username)
-            if user and check_password_hash(user.password, password):
+            if user and user.verify_password(password):
                 login_user(user)
                 logger.info("User logged in: %s", user.username)
                 identity_changed.send(
@@ -137,18 +136,14 @@ def setup_authentication(app):
                 flash("Username already exists.", "warning")
                 return redirect(url_for("authentication.register"))
 
-            hashed_password = generate_password_hash(
-                password, method="pbkdf2:sha256", salt_length=16
-            )
-
             new_user = User(
-                id=len(users) + 1,
                 username=username,
                 email=email,
-                password=hashed_password,
+                password=password,
                 role=role,
             )
-            users[username] = new_user
+            db.session.add(new_user)
+            db.session.commit()
             logger.info("New user registered: %s", username)
             flash("Registration successful. Please log in.", "success")
             return redirect(url_for("authentication.login"))

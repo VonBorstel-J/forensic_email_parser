@@ -1,0 +1,37 @@
+<!-- templates/register.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
+    <h1>Register</h1>
+    <form method="post">
+        {{ csrf_token() }}
+        <label>Username:</label><br>
+        <input type="text" name="username"><br>
+        <label>Email:</label><br>
+        <input type="email" name="email"><br>
+        <label>Password:</label><br>
+        <input type="password" name="password"><br>
+        <label>Role:</label><br>
+        <select name="role">
+            <option value="admin">Admin</option>
+            <option value="analyst">Analyst</option>
+            <option value="viewer">Viewer</option>
+        </select><br><br>
+        <input type="submit" value="Register">
+    </form>
+    <p><a href="{{ url_for('authentication.login') }}">Back to Login</a></p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li><strong>{{ category.capitalize() }}:</strong> {{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>
